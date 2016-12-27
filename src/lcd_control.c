@@ -33,6 +33,7 @@ void LCD_Configuration(void)
 	// Now for the high 8 bits
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7;
 	GPIO_Init(GPIOC,&GPIO_InitStructure);
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
 
 	// Control pins
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_12;
@@ -541,8 +542,8 @@ __inline void LCD_WriteIndex(u16 idx)
 {
 	Clr_Rs;
 	Set_nRd;
-	LCD_WriteData(idx);
 	Clr_nWr;
+	LCD_WriteData(idx);
 	Set_nWr;
 	Set_Rs;
 }
@@ -556,8 +557,15 @@ __inline void LCD_WriteIndex(u16 idx)
  */
 void LCD_WriteData(u16 data)
 {
+#ifdef ORIG
 	GPIOC->ODR = (GPIOC->ODR&0xff00)|(data&0x00ff);
 	GPIOB->ODR = (GPIOB->ODR&0x00ff)|(data&0xff00);
+#else
+	Set_LE;
+	GPIOA->ODR = (GPIOA->ODR & 0xff00) | (data & 0x00ff); // latch LSB
+	Clr_LE;
+	GPIOA->ODR = (GPIOA->ODR & 0xff00) | (data >>8);
+#endif
 }
 
 /*
@@ -600,12 +608,20 @@ void LCD_WR_End(void)
 __inline u16 LCD_ReadData(void)
 {
 	u16 temp;
+#ifdef ORIG
 	GPIOB->CRH = (GPIOB->CRH & 0x00000000) | 0x44444444;		// configure pins for reading
 	GPIOC->CRL = (GPIOC->CRL & 0x00000000) | 0x44444444;
-	temp = ((GPIOB->IDR&0xff00) | (GPIOC->IDR&0x00ff));
+	temp = ((GPIOB->IDR & 0xff00) | (GPIOC->IDR & 0x00ff));
 	GPIOB->CRH = (GPIOB->CRH & 0x00000000) | 0x44444444;		// reconfigure back to normal operation
 	GPIOC->CRL = (GPIOC->CRL & 0x00000000) | 0x44444444;
-	return temp;
+#else
+	GPIOA->CRL = (GPIOB->CRH & 0x00000000) | 0x44444444;		// configure pins for reading
+	temp = (GPIOA->IDR & 0x00ff);
+	Set_nRd;
+	Clr_nRd;
+	temp |= ((GPIOA->IDR & 0x00ff) << 8);
+#endif
+return temp;
 }
 
 /*
@@ -691,9 +707,16 @@ void LCD_Backlight(u16 status)
  * Output: none
  * Call: LCD_Delay(50000);
  */
-void LCD_Delay(vu32 nCount)
+void LCD_Delay(vu32 uSec)
 {
-	for(;nCount != 0;nCount--);
+	while (uSec--) 
+		{};
+#if 0
+ uint32_t cycles = (SystemCoreClock / 1000000L)*uSec;
+	volatile uint32_t start = DWT->CYCCNT;
+	do {
+	} while (DWT->CYCCNT - start < cycles);
+#endif
 }
 
 /*

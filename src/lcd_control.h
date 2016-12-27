@@ -1,6 +1,7 @@
 #ifndef __LCD_CONTROLLER_H__
 #define __LCD_CONTROLLER_H__
 
+#ifdef ORIG
 #define Set_Cs GPIO_SetBits(GPIOC,GPIO_Pin_8);
 #define Clr_Cs GPIO_ResetBits(GPIOC,GPIO_Pin_8);
 
@@ -15,6 +16,25 @@
 
 #define Set_Rst GPIO_SetBits(GPIOC,GPIO_Pin_12);
 #define Clr_Rst GPIO_ResetBits(GPIOC,GPIO_Pin_12);
+#else
+#define Set_Cs GPIO_SetBits(GPIOC,GPIO_Pin_8);
+#define Clr_Cs GPIO_ResetBits(GPIOC,GPIO_Pin_8);
+
+#define Set_Rs GPIO_SetBits(GPIOC,GPIO_Pin_12);
+#define Clr_Rs GPIO_ResetBits(GPIOC,GPIO_Pin_12);
+
+#define Set_nWr GPIO_SetBits(GPIOC,GPIO_Pin_11);
+#define Clr_nWr GPIO_ResetBits(GPIOC,GPIO_Pin_11);
+
+#define Set_nRd GPIO_SetBits(GPIOC,GPIO_Pin_10);
+#define Clr_nRd GPIO_ResetBits(GPIOC,GPIO_Pin_10);
+
+#define Set_Rst GPIO_SetBits(GPIOC,GPIO_Pin_6);
+#define Clr_Rst GPIO_ResetBits(GPIOC,GPIO_Pin_6);
+
+#define Set_LE  GPIO_SetBits(GPIOB,GPIO_Pin_14);
+#define Clr_LE  GPIO_ResetBits(GPIOB,GPIO_Pin_14);
+#endif
 
 #define LCD_Light_On GPIOC->BSRR = GPIO_Pin_13;
 #define LCD_Light_Off GPIOC->BRR = GPIO_Pin_13;

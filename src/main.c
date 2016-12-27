@@ -20,6 +20,11 @@ int main(int argc, char *argv[])
 
 	/* GPIOA Periph clock enable */
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA,ENABLE);
+	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+	DWT->CYCCNT = 0;
+  /* Enable hi resolution counter */
+	DWT->CTRL &= ~0x00000001;
+	DWT->CTRL |= 0x00000001;
 
 	/* Configure PC12 to mode: slow rise-time, pushpull output */
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;//GPIO No. 0
