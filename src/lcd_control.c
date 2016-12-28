@@ -70,7 +70,10 @@ void LCD_Initialization()
 	// Wait a bit
 	LCD_WriteRegister(0x0000,0x0001);
 	LCD_Delay(10000);
+	Set_Sync;
 	LCD_DeviceCode = LCD_ReadRegister(0x0000);
+	LCD_Delay(1000);
+	Clr_Sync;
 	if (LCD_DeviceCode==0x9325 || LCD_DeviceCode == 0x9328)			// This is what we haz
 	{
 		LCD_WriteRegister(0x00e7,0x0010);
@@ -329,7 +332,7 @@ void LCD_Initialization()
 		LCD_WriteRegister(0x0007,0x0133);
 		LCD_Delay(50);
 	}
-	for (i = 50000;i > 0;i--);
+	LCD_Delay(5000);
 	LCD_Clear(LCD_Red);
 }
 
@@ -607,21 +610,22 @@ void LCD_WR_End(void)
  */
 __inline u16 LCD_ReadData(void)
 {
-	u16 temp;
+	u16 value;
 #ifdef ORIG
 	GPIOB->CRH = (GPIOB->CRH & 0x00000000) | 0x44444444;		// configure pins for reading
 	GPIOC->CRL = (GPIOC->CRL & 0x00000000) | 0x44444444;
-	temp = ((GPIOB->IDR & 0xff00) | (GPIOC->IDR & 0x00ff));
+	value = ((GPIOB->IDR & 0xff00) | (GPIOC->IDR & 0x00ff));
 	GPIOB->CRH = (GPIOB->CRH & 0x00000000) | 0x44444444;		// reconfigure back to normal operation
 	GPIOC->CRL = (GPIOC->CRL & 0x00000000) | 0x44444444;
 #else
-	GPIOA->CRL = (GPIOB->CRH & 0x00000000) | 0x44444444;		// configure pins for reading
-	temp = (GPIOA->IDR & 0x00ff);
+	GPIOA->CRL =  0x44444444;		// configure pins for reading
+	value = (GPIOA->IDR & 0x00ff);
 	Set_nRd;
 	Clr_nRd;
-	temp |= ((GPIOA->IDR & 0x00ff) << 8);
+	value |= ((GPIOA->IDR & 0x00ff) << 8);
+	GPIOA->CRL =  0x33333333;		// reconfigure back to normal operation
 #endif
-return temp;
+	return value;
 }
 
 /*
@@ -633,13 +637,14 @@ return temp;
  */
 __inline u16 LCD_ReadRegister(u16 index)
 {
+	u16 value;
 	Clr_Cs;
 	LCD_WriteIndex(index);
 	Clr_nRd;
-	index = LCD_ReadData();
+	value = LCD_ReadData();
 	Set_nRd;
 	Set_Cs;
-	return index;
+	return value;
 }
 
 /*
@@ -651,17 +656,17 @@ __inline u16 LCD_ReadRegister(u16 index)
  */
 __inline void LCD_WriteRegister(u16 index,u16 data)
 {
-	Clr_Cs;
-	Clr_Rs;
-	Set_nRd;
+	Clr_Cs;   //chip select
+	Clr_Rs;   //command
+	Set_nRd;  // not reading
 	LCD_WriteData(index);
 
-	Clr_nWr;Set_nWr;
-	Set_Rs;
+	Clr_nWr;Set_nWr; //do write
+	Set_Rs;		//data
 	LCD_WriteData(data);
 
-	Clr_nWr;Set_nWr;
-	Set_Cs;
+	Clr_nWr;Set_nWr; //do write
+	Set_Cs;    //no chip select
 }
 
 /*
@@ -709,9 +714,11 @@ void LCD_Backlight(u16 status)
  */
 void LCD_Delay(vu32 uSec)
 {
+//#define NO_DWT_USAGE
+#ifdef NO_DWT_USAGE
 	while (uSec--) 
 		{};
-#if 0
+#else
  uint32_t cycles = (SystemCoreClock / 1000000L)*uSec;
 	volatile uint32_t start = DWT->CYCCNT;
 	do {

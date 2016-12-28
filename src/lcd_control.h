@@ -34,6 +34,9 @@
 
 #define Set_LE  GPIO_SetBits(GPIOB,GPIO_Pin_14);
 #define Clr_LE  GPIO_ResetBits(GPIOB,GPIO_Pin_14);
+
+#define Set_Sync  GPIO_SetBits(GPIOB,GPIO_Pin_8);  // synchronize oscilloscope
+#define Clr_Sync  GPIO_ResetBits(GPIOB,GPIO_Pin_8);
 #endif
 
 #define LCD_Light_On GPIOC->BSRR = GPIO_Pin_13;

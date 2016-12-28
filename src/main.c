@@ -13,26 +13,24 @@
 
 int main(int argc, char *argv[])
 {
-	LCD_Configuration();
-	LCD_Initialization();
-	GPIO_InitTypeDef GPIO_InitStructure;
-	u32 delay;
 
-	/* GPIOA Periph clock enable */
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA,ENABLE);
 	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
 	DWT->CYCCNT = 0;
   /* Enable hi resolution counter */
 	DWT->CTRL &= ~0x00000001;
 	DWT->CTRL |= 0x00000001;
 
-	/* Configure PC12 to mode: slow rise-time, pushpull output */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;//GPIO No. 0
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;;//slow rise time
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;// push-pull output
-	GPIO_Init(GPIOA,&GPIO_InitStructure);//GPIOA init
 
-	//LCD_Test();
+	LCD_Configuration();
+	LCD_Initialization();
+
+	u32 delay;
+
+
+
+
+
+	LCD_Test();
 
 	while(1)
 	{
