@@ -17,33 +17,53 @@ u16 LCD_DeviceCode;
 static LCD_OrientationMode_t orientation_mode = LCD_ORIENTATION_DEFAULT;
 
 void LCD_Configuration(void)
-{
+	{
+	/*变量定义区*/
 	GPIO_InitTypeDef GPIO_InitStructure;
 	
-	// Open the clock we want
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOC,ENABLE);
-
-	// Configure the LCD pins for push-pull output
-	// This is just the lower 8 bits of data
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_Init(GPIOB,&GPIO_InitStructure);
-
-	// Now for the high 8 bits
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7;
-	GPIO_Init(GPIOC,&GPIO_InitStructure);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
+	//***************************************************************************
+	// PA OUT
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0|GPIO_Pin_1|GPIO_Pin_2|GPIO_Pin_3|GPIO_Pin_4|GPIO_Pin_5|GPIO_Pin_6|GPIO_Pin_7|GPIO_Pin_9;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;	//开漏输出
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	//50M时钟速度
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
 
-	// Control pins
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_12;
-	GPIO_Init(GPIOC,&GPIO_InitStructure);
+	
+	// PB OUT
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6|GPIO_Pin_7|GPIO_Pin_8|GPIO_Pin_14|GPIO_Pin_15;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;	//开漏输出
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	//50M时钟速度
+	GPIO_Init(GPIOB, &GPIO_InitStructure);
+	// PB IN
+	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_5|GPIO_Pin_9|GPIO_Pin_11|GPIO_Pin_12|GPIO_Pin_13;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;		//上拉输入
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	//50M时钟速度
+	GPIO_Init(GPIOB, &GPIO_InitStructure);
 
-	// Backlight control
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;
-	GPIO_Init(GPIOC,&GPIO_InitStructure);
-	LCD_Light_On;
+	// PC OUT
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0|GPIO_Pin_4|GPIO_Pin_5|GPIO_Pin_6|GPIO_Pin_7|GPIO_Pin_8|GPIO_Pin_9|GPIO_Pin_10|GPIO_Pin_11|GPIO_Pin_12|GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;	//开漏输出
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	//50M时钟速度
+	GPIO_Init(GPIOC, &GPIO_InitStructure);
+	// PC IN
+	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_1|GPIO_Pin_2|GPIO_Pin_3;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;		//上拉输入
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	//50M时钟速度
+	GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+	// PD IN
+	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_2;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;		//上拉输入
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	//50M时钟速度
+	GPIO_Init(GPIOD, &GPIO_InitStructure);
 }
+
+
+
 
 /*
  * Name: void LCD_Initialization()
@@ -57,7 +77,7 @@ void LCD_Initialization()
 	u16 i;
 
 	// Set all bits
-	LCD_WriteData(0xffff);
+/*	LCD_WriteData(0xffff);
 	// Set various pins
 	Set_Rst;
 	Set_nWr;
@@ -65,276 +85,155 @@ void LCD_Initialization()
 	Set_Rs;
 	Set_nRd;
 	Set_Rst;
-	LCD_Reset();	// reset LCD
-
-	// Wait a bit
-	LCD_WriteRegister(0x0000,0x0001);
-	LCD_Delay(10000);
-	Set_Sync;
-	LCD_DeviceCode = LCD_ReadRegister(0x0000);
 	LCD_Delay(1000);
-	Clr_Sync;
-	if (LCD_DeviceCode==0x9325 || LCD_DeviceCode == 0x9328)			// This is what we haz
-	{
-		LCD_WriteRegister(0x00e7,0x0010);
-		LCD_WriteRegister(0x0000,0x0001);			// Starts internal oscillator
-		LCD_WriteRegister(0x0001,0x0100);
-		LCD_WriteRegister(0x0002,0x0700);			// Power on
-		LCD_WriteRegister(0x0003,(1 << 12) | (1 << 5) | (1 << 4));		// 65K
-		LCD_WriteRegister(0x0004,0x0000);
-		LCD_WriteRegister(0x0008,0x0207);
-		LCD_WriteRegister(0x0009,0x0000);
-		LCD_WriteRegister(0x000a,0x0000);			// Display setting
-		LCD_WriteRegister(0x000c,0x0001);
-		LCD_WriteRegister(0x000d,0x0000);
-		LCD_WriteRegister(0x000f,0x0000);
+*/
+	
+	LCD_Reset();	// reset LCD
+//	LCD_Delay(10000);					// Wait a bit
+//	LCD_WriteRegister(0x0000,0x0001);
+//	LCD_Delay(10000);
+//	Set_Sync;
+//	LCD_DeviceCode = LCD_ReadRegister(0x0000);
+//	LCD_Delay(10);
+//	Clr_Sync;
 
-		// Power on sequence
-		LCD_WriteRegister(0x0010,0x0000);
-		LCD_WriteRegister(0x0011,0x0007);
-		LCD_WriteRegister(0x0012,0x0000);
-		LCD_WriteRegister(0x0013,0x0000); 
-		for (i = 50000;i > 0;i--);
-		for (i = 50000;i > 0;i--);
-		LCD_WriteRegister(0x0010,0x1590);
-		LCD_WriteRegister(0x0011,0x0227);
-		for (i = 50000;i > 0;i--);
-		for (i = 50000;i > 0;i--);
-		LCD_WriteRegister(0x0012,0x009c);
-		for (i = 50000;i > 0;i--);
-		for (i = 50000;i > 0;i--);
-		LCD_WriteRegister(0x0013,0x1900);
-		LCD_WriteRegister(0x0029,0x0023);
-		LCD_WriteRegister(0x002b,0x000e);
-		for (i = 50000;i > 0;i--);
-		for (i = 50000;i > 0;i--);
-		LCD_WriteRegister(0x0020,0x0000);
-		LCD_WriteRegister(0x0021,0x0000);
-		for (i = 50000;i > 0;i--);
-		for (i = 50000;i > 0;i--);
-		LCD_WriteRegister(0x0030,0x0007);
-		LCD_WriteRegister(0x0031,0x0707);
-		LCD_WriteRegister(0x0032,0x0006);
-		LCD_WriteRegister(0x0035,0x0704);
-		LCD_WriteRegister(0x0036,0x1f04);
-		LCD_WriteRegister(0x0037,0x0004);
-		LCD_WriteRegister(0x0038,0x0000);
-		LCD_WriteRegister(0x0039,0x0706);
-		LCD_WriteRegister(0x003c,0x0701);
-		LCD_WriteRegister(0x003d,0x000f);
-		for (i = 50000;i > 0;i--);
-		for (i = 50000;i > 0;i--);
-		LCD_WriteRegister(0x0050,0x0000);
-		LCD_WriteRegister(0x0051,0x00ef);
-		LCD_WriteRegister(0x0052,0x0000);
-		LCD_WriteRegister(0x0053,0x013f);
-		LCD_WriteRegister(0x0060,0xa700);
-		LCD_WriteRegister(0x0061,0x0001);
-		LCD_WriteRegister(0x006a,0x0000);
-		LCD_WriteRegister(0x0080,0x0000);
-		LCD_WriteRegister(0x0081,0x0000);
-		LCD_WriteRegister(0x0082,0x0000);
-		LCD_WriteRegister(0x0083,0x0000);
-		LCD_WriteRegister(0x0084,0x0000);
-		LCD_WriteRegister(0x0085,0x0000);
-		LCD_WriteRegister(0x0090,0x0010);
-		LCD_WriteRegister(0x0092,0x0000);
-		LCD_WriteRegister(0x0093,0x0003);
-		LCD_WriteRegister(0x0095,0x0110);
-		LCD_WriteRegister(0x0097,0x0000);
-		LCD_WriteRegister(0x0098,0x0000);
-
-		// Display on sequence
-		LCD_WriteRegister(0x0007,0x0133);
-		LCD_WriteRegister(0x0020,0x0000);
-		LCD_WriteRegister(0x0021,0x0000);
-	}
-	else if (LCD_DeviceCode == 0x9320)
-	{
-		LCD_WriteRegister(0x00,0x0000);		// Start Oscillation
+		LCD_WriteRegister(0x00,0x8000);	
+		LCD_WriteRegister(0x00,0x0001);		// Start Oscillation
 		LCD_WriteRegister(0x01,0x0100);		// Driver output control (makes it scan top left to bottom right, odd for top half, even for bottom)
 		LCD_WriteRegister(0x02,0x0700);		// Line inversion on the LCD Driving Wave Control
-		LCD_WriteRegister(0x03,0x1018);		// Entry mode set(may need changing)(0x1018)
+		LCD_WriteRegister(0x03,0x1030);		// Entry mode set(may need changing)(0x1018)
 		LCD_WriteRegister(0x04,0x0000);		// Resizing stuff(not needed by me)
+
 		LCD_WriteRegister(0x08,0x0202);		// (Display control 2) Set 2 lines for for both front and back porch(minimum number, helps VSYNC)
 		LCD_WriteRegister(0x09,0x0000);		// (Display control 3) Sets 0 frame scan cycle(not needed for this communication) and normal scan
 		LCD_WriteRegister(0x0a,0x0000);		// Not necessary(FMARK signal stuff)
-		LCD_WriteRegister(0x0c,(1<<0));		// 16-bit RGB interface(1 transfer/pixel), using internal system clock and system interface (0x0001)
+
+//possible probleme si 8 bits ?????
+
+//		LCD_WriteRegister(0x0c,(1<<0));		// 16-bit RGB interface(1 transfer/pixel), using internal system clock and system interface (0x0001)
+		LCD_WriteRegister(0x0a,0x0000);			// 16-bit RGB interface
+			
 		LCD_WriteRegister(0x0d,0x0000);		// Frame Marker at position 0(starts outputting frame right away
 		LCD_WriteRegister(0x0f,0x0000);		// Data input on rising edge of DOTCLK, data written when ENABLE=0,HSPL/VSPL(H/VSYNC pins) Low polarit = active
 
-		for (i = 50000;i > 0;i--);
-		for (i = 50000;i > 0;i--);
-		LCD_WriteRegister(0x07,0x0101);		// (Display control 1) Set display to operate, VCOM output to GND
-		for (i = 50000;i > 0;i--);
-		for (i = 50000;i > 0;i--);
+//		LCD_WriteRegister(0x07,0x0101);		// (Display control 1) Set display to operate, VCOM output to GND
+		LCD_WriteRegister(0x10,0x0000);	
+//		LCD_WriteRegister(0x10,(1 << 12) | (0 << 8) | (1 << 7) | (1 << 6) | (0 << 4));		// (Power control 1) Enable power supply(0x10c0)
 
-		LCD_WriteRegister(0x10,(1 << 12) | (0 << 8) | (1 << 7) | (1 << 6) | (0 << 4));		// (Power control 1) Enable power supply(0x10c0)
 		LCD_WriteRegister(0x11,0x0007);		// (Power control 2) Ref. voltage(VciOUT) = Vci1, operating frequency = Fosc in circuit 1 and Fosc/16 in circuit 2
-		LCD_WriteRegister(0x12,(1 << 8) | (1 << 4) | (0 << 0));		// (Power control 3) Enable VGL output, use internal electric volume(VCM) to set VcomH(Vcom center voltage level(0x0110)
-		LCD_WriteRegister(0x13,0x0b00);		// (Power control 4) VCOM Amplitude = VREG1OUT x 0.90
-		LCD_WriteRegister(0x29,0x0000);		// (Power control 7) VcomH voltage = VREG1OUT x .69
 
+		LCD_WriteRegister(0x12,0x0000);	
+//	LCD_WriteRegister(0x12,(1 << 8) | (1 << 4) | (0 << 0));		// (Power control 3) Enable VGL output, use internal electric volume(VCM) to set VcomH(Vcom center voltage level(0x0110)
+
+		LCD_WriteRegister(0x13,0x0000);	
+//	LCD_WriteRegister(0x13,0x0b00);		// (Power control 4) VCOM Amplitude = VREG1OUT x 0.90
+		LCD_Delay(50000);
+		LCD_Delay(50000);
+		LCD_Delay(50000);
+		LCD_Delay(50000);								// 200ms
+		LCD_WriteRegister(0x10,0x17B0);
+		LCD_WriteRegister(0x11,0x0037);
+		LCD_Delay(50000);		
+		LCD_WriteRegister(0x12,0x013a);
+		LCD_Delay(50000);
+		LCD_WriteRegister(0x13,0x1600);
+		
+		LCD_WriteRegister(0x29,0x000c);		// (Power control 7) VcomH voltage = VREG1OUT x .69
+		LCD_Delay(50000);
+		LCD_WriteRegister(0x20,0x0000);
+		LCD_WriteRegister(0x21,0x0000);
+
+		LCD_WriteRegister(0x30,0x0504);
+		LCD_WriteRegister(0x31,0x0703);
+		LCD_WriteRegister(0x32,0x0702);
+		LCD_WriteRegister(0x35,0x0101);
+		LCD_WriteRegister(0x36,0x0A1F);
+		LCD_WriteRegister(0x37,0x0504);
+		LCD_WriteRegister(0x38,0x0003);
+		LCD_WriteRegister(0x39,0x0706);
+		LCD_WriteRegister(0x0C,0x0707);
+		LCD_WriteRegister(0x3D,0x091F);
+
+/*
 		LCD_WriteRegister(0x2b,(1 << 14) | (1 << 4));		// 90Hz frame rate, internal resistor. (maybe should be 0x0408)(0x0008)
-
+		LCD_Delay(50000);
 		// Horiz. and Vert. RAM Address Position. Set up for 320x240
 		LCD_WriteRegister(0x50,0);			// X starts at 0
+		LCD_Delay(50000);
 		LCD_WriteRegister(0x51,239);		// X ends at 239
+		LCD_Delay(50000);
 		LCD_WriteRegister(0x52,0);			// Y starts at 0
+		LCD_Delay(50000);
 		LCD_WriteRegister(0x53,319);		// Y ends at 319
-
+		LCD_Delay(50000);
 		LCD_WriteRegister(0x60,0x2700);		// (Driver output control) Gate scans at 0, ends after 320 lines
+		LCD_Delay(50000);
 		LCD_WriteRegister(0x61,0x0001);		// (Driver output control) grayscale inversion
+		LCD_Delay(50000);
 		LCD_WriteRegister(0x6a,0x0000);		// (Vertical scroll control) not used
-
+		LCD_Delay(50000);
 		LCD_WriteRegister(0x80,0x0000);		// Display position for partial image 1
+		LCD_Delay(50000);
 		LCD_WriteRegister(0x81,0x0000);		// RAM address for start of partial image 1
+		LCD_Delay(50000);
 		LCD_WriteRegister(0x82,0x0000);		// RAM address for end of partial image 1
+		LCD_Delay(50000);
 		LCD_WriteRegister(0x83,0x0000);		// Display position for partial image 2
+		LCD_Delay(50000);
 		LCD_WriteRegister(0x84,0x0000);		// RAM address for start of partial image 2
+		LCD_Delay(50000);
 		LCD_WriteRegister(0x85,0x0000);		// RAM address for end of partial image 2
-
+		LCD_Delay(50000);
 		LCD_WriteRegister(0x90,(0 << 7) | (16 << 0));		// (Panel interface control 1) Sets clock number for internal clock
+		LCD_Delay(50000);
 		LCD_WriteRegister(0x92,0x0000);		// (Panel interface control 2) 0 Clocks of overlap when synced
+		LCD_Delay(50000);
 		LCD_WriteRegister(0x93,0x0001);		// (Panel interface control 3) 1 Clock output position when synced
+		LCD_Delay(50000);
 		LCD_WriteRegister(0x95,0x0110);		// (Panel interface control 4) Division ration of 1/4, 16 clocks per horizontal line
+		LCD_Delay(50000);
 		LCD_WriteRegister(0x97,(0 << 8));		// (Panel interface control 5) 0 Clock non-overlap
+		LCD_Delay(50000);
 		LCD_WriteRegister(0x98,0x0000);		// (Panel interface control 6) Source output position 0 clocks
-
+		LCD_Delay(50000);
 		LCD_WriteRegister(0x07,0x0173);		// (Display control 1) Set display to operate, base image display, normal display (maybe should be 0x0173)
-	}
-	else if (LCD_DeviceCode == 0x9919)
-	{
-		LCD_WriteRegister(0x28,0x0006);
-		LCD_WriteRegister(0x00,0x0001);
-		LCD_WriteRegister(0x10,0x0000);
-		LCD_WriteRegister(0x01,0x72ef);
-		LCD_WriteRegister(0x02,0x0600);
-		LCD_WriteRegister(0x03,0x6a38);
-		LCD_WriteRegister(0x11,0x6874);
-
-		LCD_WriteRegister(0x0f,0x0000);
-		LCD_WriteRegister(0x0b,0x5308);
-		LCD_WriteRegister(0x0c,0x0003);
-		LCD_WriteRegister(0x0d,0x000a);
-		LCD_WriteRegister(0x0c,0x0003);
-		LCD_WriteRegister(0x0d,0x000a);
-		LCD_WriteRegister(0x0e,0x2e00);
-		LCD_WriteRegister(0x1e,0x00be);
-		LCD_WriteRegister(0x25,0x8000);
-		LCD_WriteRegister(0x26,0x7800);
-		LCD_WriteRegister(0x27,0x0078);
-		LCD_WriteRegister(0x4e,0x0000);
-		LCD_WriteRegister(0x4f,0x0000);
-		LCD_WriteRegister(0x12,0x08d9);
-
-		LCD_WriteRegister(0x30,0x0000);
-		LCD_WriteRegister(0x31,0x0104);
-		LCD_WriteRegister(0x32,0x0100);
-		LCD_WriteRegister(0x33,0x0305);
-		LCD_WriteRegister(0x34,0x0505);
-		LCD_WriteRegister(0x35,0x0305);
-		LCD_WriteRegister(0x36,0x0707);
-		LCD_WriteRegister(0x37,0x0300);
-		LCD_WriteRegister(0x3a,0x1200);
-		LCD_WriteRegister(0x3b,0x0800);
-		LCD_WriteRegister(0x07,0x0033);
-	}
-	else if (LCD_DeviceCode == 0x4531) 
-	{
-		LCD_WriteRegister(0x00,0x0001);
-		LCD_WriteRegister(0x10,0x0628);
-		LCD_WriteRegister(0x12,0x0006);
-		LCD_WriteRegister(0x13,0x0A32);
-		LCD_WriteRegister(0x11,0x0040);
-		LCD_WriteRegister(0x15,0x0050);
-		LCD_WriteRegister(0x12,0x0016);
-		LCD_Delay(15);
-		LCD_WriteRegister(0x10,0x5660);
-		LCD_Delay(15);
-		LCD_WriteRegister(0x13,0x2A4E);
-		LCD_WriteRegister(0x01,0x0100);
-		LCD_WriteRegister(0x02,0x0300);
-		
-		LCD_WriteRegister(0x03,0x1030);
-
-		LCD_WriteRegister(0x08,0x0202);
-		LCD_WriteRegister(0x0A,0x0000);
-		LCD_WriteRegister(0x30,0x0000);
-		LCD_WriteRegister(0x31,0x0402);
-		LCD_WriteRegister(0x32,0x0106);
-		LCD_WriteRegister(0x33,0x0700);
-		LCD_WriteRegister(0x34,0x0104);
-		LCD_WriteRegister(0x35,0x0301);
-		LCD_WriteRegister(0x36,0x0707);
-		LCD_WriteRegister(0x37,0x0305);
-		LCD_WriteRegister(0x38,0x0208);
-		LCD_WriteRegister(0x39,0x0F0B);
-		LCD_Delay(15);
-		LCD_WriteRegister(0x41,0x0002);
+		LCD_Delay(50000);
+		LCD_Delay(5000);
+		LCD_Clear(LCD_Black);
+		LCD_Delay(50000);
+		LCD_Delay(50000);
+		LCD_Clear(LCD_Red);
+		LCD_Delay(50000);
+		LCD_Delay(50000);		
+}
+*/
+								//  set GRAM area
+		LCD_WriteRegister(0x50,0x0000);
+		LCD_WriteRegister(0x51,0x00EF);
+		LCD_WriteRegister(0x52,0x0000);
+		LCD_WriteRegister(0x53,0x013F);
 		LCD_WriteRegister(0x60,0x2700);
 		LCD_WriteRegister(0x61,0x0001);
-		LCD_WriteRegister(0x90,0x0119);
-		LCD_WriteRegister(0x92,0x010A);
-		LCD_WriteRegister(0x93,0x0004);
-		LCD_WriteRegister(0xA0,0x0100);
-		LCD_Delay(60);
-		LCD_WriteRegister(0x07,0x0133);
-		LCD_Delay(15);
-		LCD_WriteRegister(0xA0,0x0000);
-		LCD_Delay(20);
+		LCD_WriteRegister(0x6A,0x0000);		
+		
+						// partiazl display control
+						
+		LCD_WriteRegister(0x80,0x0000);
+		LCD_WriteRegister(0x81,0x0000);
+		LCD_WriteRegister(0x82,0x0000);
+		LCD_WriteRegister(0x83,0x0000);
+		LCD_WriteRegister(0x84,0x0000);
+		LCD_WriteRegister(0x85,0x0000);
+		
+						//Panel control
+		LCD_WriteRegister(0x90,0x0010);
+		LCD_WriteRegister(0x92,0x0000);
+		LCD_WriteRegister(0x93,0x0003);
+		LCD_WriteRegister(0x95,0x0110);
+		LCD_WriteRegister(0x97,0x0000);
+		LCD_WriteRegister(0x98,0x0000);
+		LCD_WriteRegister(0x07,0x0173);		//262K color and display ON 
 	}
-	else if (LCD_DeviceCode == 0x7783)
-	{
-		LCD_WriteRegister(0x00FF,0x0001);
-		LCD_WriteRegister(0x00F3,0x0008);
-		LCD_WriteRegister(0x0001,0x0100);
-		LCD_WriteRegister(0x0002,0x0700);
-		LCD_WriteRegister(0x0003,0x1030);
-		LCD_WriteRegister(0x0008,0x0302);
-		LCD_WriteRegister(0x0009,0x0000);
-		LCD_WriteRegister(0x000A,0x0000);
-		LCD_WriteRegister(0x0010,0x0005);
-		LCD_WriteRegister(0x0011,0x0005);
-		LCD_WriteRegister(0x0012,0x0000);
-		LCD_WriteRegister(0x0013,0x0000);
-		LCD_Delay(50);
-		LCD_WriteRegister(0x0010,0x12B0);
-		LCD_Delay(50);
-		LCD_WriteRegister(0x0011,0x0007);
-		LCD_Delay(50);
-		LCD_WriteRegister(0x0012,0x008B);
-		LCD_Delay(50);
-		LCD_WriteRegister(0x0013,0x1700);
-		LCD_Delay(50);
-		LCD_WriteRegister(0x0029,0x0022);
-
-		LCD_WriteRegister(0x0030,0x0000);
-		LCD_WriteRegister(0x0031,0x0707);
-		LCD_WriteRegister(0x0032,0x0505);
-		LCD_WriteRegister(0x0035,0x0107);
-		LCD_WriteRegister(0x0036,0x0008);
-		LCD_WriteRegister(0x0037,0x0000);
-		LCD_WriteRegister(0x0038,0x0202);
-		LCD_WriteRegister(0x0039,0x0106);
-		LCD_WriteRegister(0x003C,0x0202);
-		LCD_WriteRegister(0x003D,0x0408);
-		LCD_Delay(50);
-
-		LCD_WriteRegister(0x0050,0x0000);
-		LCD_WriteRegister(0x0051,0x00EF);
-		LCD_WriteRegister(0x0052,0x0000);
-		LCD_WriteRegister(0x0053,0x013F);
-		LCD_WriteRegister(0x0060,0xA700);
-		LCD_WriteRegister(0x0061,0x0001);
-		LCD_WriteRegister(0x0090,0x0033);
-		LCD_WriteRegister(0x002B,0x000B);
-		LCD_WriteRegister(0x0007,0x0133);
-		LCD_Delay(50);
-	}
-	LCD_Delay(5000);
-	LCD_Clear(LCD_Red);
-}
 
 /*
  * Name: void LCD_SetCursor(u16 x,u16 y)
@@ -345,8 +244,10 @@ void LCD_Initialization()
  */
 __inline void LCD_SetCursor(u16 x,u16 y)
 {
-	LCD_WriteRegister(0x20,y);		// Y position register
-	LCD_WriteRegister(0x21,319 - x);	// X position register
+		LCD_WriteRegister(0x20,y);		// Y position register
+		LCD_Delay(50000);
+		LCD_WriteRegister(0x21,319 - x);	// X position register
+		LCD_Delay(50000);
 }
 
 /*
@@ -359,10 +260,15 @@ __inline void LCD_SetCursor(u16 x,u16 y)
 __inline void LCD_SetWindow(u16 Startx,u16 Starty,u16 Endx,u16 Endy)
 {
 	LCD_SetCursor(Startx,Starty);
+
 	LCD_WriteRegister(0x50,Startx);
+
 	LCD_WriteRegister(0x52,Starty);
+
 	LCD_WriteRegister(0x51,Endx);
+
 	LCD_WriteRegister(0x53,Endy);
+
 }
 
 /*
@@ -385,7 +291,6 @@ void LCD_Clear(u16 Color)
 		Clr_nWr;
 		Set_nWr;
 	}
-
 	Set_Cs;
 }
 
@@ -407,6 +312,7 @@ void LCD_SetPoint(u16 x,u16 y,u16 Color)
 	LCD_WriteData(Color);
 	Clr_nWr; Set_nWr;
 	LCD_WR_End();
+
 }
 
 /*
@@ -422,11 +328,13 @@ void LCD_DrawPicture(u16 Startx,u16 Starty,u16 Endx,u16 Endy,u16 *pic)
 	LCD_SetWindow(Startx,Starty,Endx,Endy);
 	LCD_SetCursor(Startx,Starty);
 	LCD_WR_Start();
-	for (i = 0;i < (Endx * Endy);i++)
+//	for (i = 0;i < (Endx * Endy);i++)
 	{
 		LCD_WriteData(*pic++);
 		Clr_nWr;Set_nWr;
 	}
+		
+
 	LCD_WR_End();
 }
 
@@ -440,13 +348,25 @@ void LCD_DrawPicture(u16 Startx,u16 Starty,u16 Endx,u16 Endy,u16 *pic)
 void LCD_Test()
 {
 	u8 R_data,G_data,B_data,i,j;
-
 	LCD_SetCursor(0,0);
+		LCD_Delay(10000);
 	LCD_WriteRegister(0x50,0);		// Set horizontal start of window at 0
+		LCD_Delay(10000);
 	LCD_WriteRegister(0x51,239);	// Set horizontal end of window at 239
+		LCD_Delay(10000);
 	LCD_WriteRegister(0x52,0);		// Set vertical start of window at 0
+		LCD_Delay(10000);
 	LCD_WriteRegister(0x53,319);	// Set vertical end of window at 319
+		LCD_Delay(10000);
+	
+
 	LCD_WR_Start();
+	
+
+		
+		LCD_Delay(10000);
+	
+	
 	R_data = 0;G_data = 0;B_data = 0;
 	/********** RED **********/
 	for (j = 0;j < 50;j++)
@@ -455,7 +375,8 @@ void LCD_Test()
 		{
 			R_data = i / 8;
 			LCD_WriteData(R_data << 11 | G_data << 5 | B_data);
-			Clr_nWr;Set_nWr;
+			Clr_nWr;
+			Set_nWr;
 		}
 	}
 	R_data = 0x1f;G_data = 0x3f;B_data = 0x1f;
@@ -466,9 +387,16 @@ void LCD_Test()
 			G_data = 0x3f - (i / 4);
 			B_data = 0x1f - (i / 8);
 			LCD_WriteData(R_data << 11 | G_data << 5 | B_data);
-			Clr_nWr;Set_nWr;
+			Clr_nWr;
+			Set_nWr;
 		}
 	}
+	
+		
+
+		
+
+
 	/********** GREEN **********/
 	R_data = 0;G_data = 0;B_data = 0;
 	for (j = 0;j < 50;j++)
@@ -477,7 +405,8 @@ void LCD_Test()
 		{
 			G_data = i / 4;
 			LCD_WriteData(R_data << 11 | G_data << 5 | B_data);
-			Clr_nWr;Set_nWr;
+			Clr_nWr;
+			Set_nWr;
 		}
 	}
 	R_data = 0x1f;G_data = 0x3f;B_data = 0x1f;
@@ -488,9 +417,13 @@ void LCD_Test()
 			R_data = 0x1f - (i / 8);
 			B_data = 0x1f - (i / 8);
 			LCD_WriteData(R_data << 11 | G_data << 5 | B_data);
-			Clr_nWr;Set_nWr;
+			Clr_nWr;
+			Set_nWr;
 		}
 	}
+	
+
+	
 	/********** BLUE **********/
 	R_data = 0;G_data = 0;B_data = 0;
 	for (j = 0;j < 60; j++)
@@ -499,7 +432,8 @@ void LCD_Test()
 		{
 			B_data = i / 8;
 			LCD_WriteData(R_data << 11 | G_data << 5 | B_data);
-			Clr_nWr;Set_nWr;
+			Clr_nWr;
+			Set_nWr;
 		}
 	}
 	R_data = 0x1f;G_data = 0x3f;B_data = 0x1f;
@@ -510,7 +444,8 @@ void LCD_Test()
 			G_data = 0x3f - (i / 4);
 			R_data = 0x1f - (i / 8);
 			LCD_WriteData(R_data << 11 | G_data << 5 | B_data);
-			Clr_nWr;Set_nWr;
+			Clr_nWr;
+			Set_nWr;
 		}
 	}
 	LCD_WR_End();
@@ -559,17 +494,17 @@ __inline void LCD_WriteIndex(u16 idx)
  * Call: LCD_WriteData(0x0000);
  */
 void LCD_WriteData(u16 data)
+	
+
+										// version invers閑 
 {
-#ifdef ORIG
-	GPIOC->ODR = (GPIOC->ODR&0xff00)|(data&0x00ff);
-	GPIOB->ODR = (GPIOB->ODR&0x00ff)|(data&0xff00);
-#else
 	Set_LE;
-	GPIOA->ODR = (GPIOA->ODR & 0xff00) | (data & 0x00ff); // latch LSB
+	GPIOA->ODR = (GPIOA->ODR & 0xff00) | (data >>8);  
 	Clr_LE;
-	GPIOA->ODR = (GPIOA->ODR & 0xff00) | (data >>8);
-#endif
+	GPIOA->ODR = (GPIOA->ODR & 0xff00) | (data & 0x00ff); // latch LSB
 }
+
+
 
 /*
  * Name: void LCD_WR_Start(void)
@@ -656,17 +591,20 @@ __inline u16 LCD_ReadRegister(u16 index)
  */
 __inline void LCD_WriteRegister(u16 index,u16 data)
 {
-	Clr_Cs;   //chip select
-	Clr_Rs;   //command
-	Set_nRd;  // not reading
+	Clr_Cs;  					 //chip select
+	Clr_Rs;  					 //command
+	Set_nRd; 					 // not reading
+
 	LCD_WriteData(index);
 
-	Clr_nWr;Set_nWr; //do write
-	Set_Rs;		//data
+	Clr_nWr;
+	Set_nWr;           //do write
+	Set_Rs;							//data
 	LCD_WriteData(data);
 
-	Clr_nWr;Set_nWr; //do write
-	Set_Cs;    //no chip select
+	Clr_nWr;
+	Set_nWr; 				//do write
+	Set_Cs;   		 //no chip select
 }
 
 /*
@@ -677,13 +615,19 @@ __inline void LCD_WriteRegister(u16 index,u16 data)
  * Call: LCD_Reset();
  */
 void LCD_Reset()
+	
 {
+		u16 i;
 	Set_Rst;
-	LCD_Delay(50000);
+	LCD_Delay(2000);        //2 ms
+	
 	Clr_Rst;
-	LCD_Delay(50000);
+	LCD_Delay(10000);				//10ms
+	
 	Set_Rst;
-	LCD_Delay(50000);
+	LCD_Delay(50000);				//50ms
+	
+//	Clr_Rst;								
 }
 
 /*
@@ -697,11 +641,11 @@ void LCD_Backlight(u16 status)
 {
 	if(status >= 1)
 	{
-		LCD_Light_On;
+//		LCD_Light_On;
 	}
 	else
 	{
-		LCD_Light_Off;
+//		LCD_Light_Off;
 	}
 }
 
