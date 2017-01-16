@@ -499,9 +499,9 @@ void LCD_WriteData(u16 data)
 										// version inversée 
 {
 	Set_LE;
-	GPIOA->ODR = (GPIOA->ODR & 0xff00) | (data >>8);  
+	GPIOA->ODR = (GPIOA->ODR & 0xff00) | (data >>8);  // Latch  MSB
 	Clr_LE;
-	GPIOA->ODR = (GPIOA->ODR & 0xff00) | (data & 0x00ff); // latch LSB
+	GPIOA->ODR = (GPIOA->ODR & 0xff00) | (data & 0x00ff); //  LSB
 }
 
 
