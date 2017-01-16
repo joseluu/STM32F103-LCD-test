@@ -20,49 +20,85 @@ int main(int argc, char *argv[])
 	DWT->CTRL &= ~0x00000001;
 	DWT->CTRL |= 0x00000001;
 
-
+		Clr_Sync;       // Flag de synchro sur bouton 3
 	LCD_Configuration();
+
+	
 	LCD_Initialization();
+	
 
 	u32 delay;
 
 
+//  	Set_Sync;       // Flag de synchro sur bouton 3
+//		LCD_Delay(1);
+//		Clr_Sync;       // Flag de synchro sur bouton 3
+		LCD_Clear (0x0000);     // Black
+		LCD_Delay(50000);		
+		LCD_Delay(50000);	
+		LCD_Delay(50000);		
+		LCD_Delay(50000);	
+		LCD_Delay(50000);		
+		LCD_Delay(50000);			
+		LCD_Clear (0x001F);			// Blue
+		LCD_Delay(50000);		
+		LCD_Delay(50000);	
+		LCD_Delay(50000);		
+		LCD_Delay(50000);	
+		LCD_Delay(50000);		
+		LCD_Delay(50000);			
+		LCD_Clear (0xF800);			// Red
+		LCD_Delay(50000);		
+		LCD_Delay(50000);	
+		LCD_Delay(50000);		
+		LCD_Delay(50000);	
+		LCD_Delay(50000);		
+		LCD_Delay(50000);			
+		LCD_Clear (0x07E0);			// Green 
+		LCD_Delay(50000);		
+		LCD_Delay(50000);	
+		LCD_Delay(50000);		
+		LCD_Delay(50000);	
+		LCD_Delay(50000);		
+		LCD_Delay(50000);			
+		
 
+		LCD_Test();
+	
+		Set_Sync;       // Flag de synchro sur bouton 3
+		LCD_Delay(1);
+		Clr_Sync;       // Flag de synchro sur bouton 3
+//		Clr_Rs
+//		LCD_Delay(1);
+//		Set_Rs;
+		
+		LCD_Delay(50000);		
+		LCD_Delay(50000);	
+		LCD_Delay(50000);		
+		LCD_Delay(50000);	
+		LCD_Delay(50000);		
+		LCD_Delay(50000);	
+		
+		LCD_Clear (0xFFFF);     // White
+		LCD_Delay(50000);		
+		LCD_Delay(50000);	
+		LCD_Delay(50000);		
+		LCD_Delay(50000);	
+		LCD_Delay(50000);		
+		LCD_Delay(50000);			
+		
 
+		LCD_Test();
+		
 
-	LCD_Test();
+		
+//		Set_Sync;       // Flag de synchro sur bouton 3
+//		Clr_Sync;       // Flag de synchro sur bouton 3
 
 	while(1)
 	{
-		LCD_Clear(LCD_Blue);
-		/* make some float calculations */
-		float x = 42,y = 23,z = 7;
-		int i = 0;
-		for (i = 0;i<6;i++)
-		{
-			z = (x*y)/z;
-		};
 
-		/* GPIO PA0 set, pin=high,LED2 off */
-		GPIOA->BSRR = GPIO_BSRR_BS2;
-		//GPIO_WriteBit(GPIOA,GPIO_Pin_1,Bit_SET);
 
-		/*delay ->> compiler optimizer settings must be "-O0" */
-		delay = 500000;
-		while(delay)
-		{
-			delay--;
-		}
-
-		/* GPIO PA0 reset pin=low, LED2 on */
-		GPIOA->BSRR = GPIO_BSRR_BR2;
-		//GPIO_WriteBit(GPIOA,GPIO_Pin_1,Bit_RESET);
-
-		/* delay --> blah */
-		delay = 500000;
-		while(delay)
-		{
-			delay--;
-		}
+	
 	}
 }

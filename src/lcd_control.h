@@ -1,22 +1,7 @@
 #ifndef __LCD_CONTROLLER_H__
 #define __LCD_CONTROLLER_H__
 
-#ifdef ORIG
-#define Set_Cs GPIO_SetBits(GPIOC,GPIO_Pin_8);
-#define Clr_Cs GPIO_ResetBits(GPIOC,GPIO_Pin_8);
 
-#define Set_Rs GPIO_SetBits(GPIOC,GPIO_Pin_9);
-#define Clr_Rs GPIO_ResetBits(GPIOC,GPIO_Pin_9);
-
-#define Set_nWr GPIO_SetBits(GPIOC,GPIO_Pin_10);
-#define Clr_nWr GPIO_ResetBits(GPIOC,GPIO_Pin_10);
-
-#define Set_nRd GPIO_SetBits(GPIOC,GPIO_Pin_11);
-#define Clr_nRd GPIO_ResetBits(GPIOC,GPIO_Pin_11);
-
-#define Set_Rst GPIO_SetBits(GPIOC,GPIO_Pin_12);
-#define Clr_Rst GPIO_ResetBits(GPIOC,GPIO_Pin_12);
-#else
 #define Set_Cs GPIO_SetBits(GPIOC,GPIO_Pin_8);
 #define Clr_Cs GPIO_ResetBits(GPIOC,GPIO_Pin_8);
 
@@ -37,10 +22,13 @@
 
 #define Set_Sync  GPIO_SetBits(GPIOB,GPIO_Pin_8);  // synchronize oscilloscope
 #define Clr_Sync  GPIO_ResetBits(GPIOB,GPIO_Pin_8);
-#endif
 
+/*#endif  */
+
+/*
 #define LCD_Light_On GPIOC->BSRR = GPIO_Pin_13;
 #define LCD_Light_Off GPIOC->BRR = GPIO_Pin_13;
+*/
 
 /* LCD colors */
 #define LCD_White				0xFFFF
@@ -50,8 +38,10 @@
 #define LCD_Green				0x07E0
 #define LCD_Cyan				0x07FF
 
+/*
 #define LCD_NCS_GPIO_PORT GPIOC
 #define LCD_NCS_PIN GPIO_Pin_8
+*/
 
 typedef enum {
 	LCD_PORTRAIT_TOP_DOWN,
@@ -120,3 +110,6 @@ uint16_t LCD_GetWidth(void);
 uint16_t LCD_GetHeight(void);
 
 #endif // __LCD_CONTROLLER_H__
+
+
+
