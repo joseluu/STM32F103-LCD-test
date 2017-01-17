@@ -596,6 +596,22 @@ void LCD_Delay(vu32 uSec)
 #endif
 }
 
+void LCD_Delay_ms(vu32 mSec)
+{
+	unsigned int uSec = 1000*mSec;
+//#define NO_DWT_USAGE
+#ifdef NO_DWT_USAGE
+	while (uSec--) 
+	{}
+	;
+#else
+	uint32_t cycles = (SystemCoreClock / 1000000L)*uSec;
+	volatile uint32_t start = DWT->CYCCNT;
+	do {
+	} while (DWT->CYCCNT - start < cycles);
+#endif
+}
+
 /*
  * Name: void LCD_SetOrienatation(LCD_OrientationMode_t m)
  * Function: sets the orientation of the LCD
